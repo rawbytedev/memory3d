@@ -1,7 +1,18 @@
 # Memory3D - A 3D Virtual Memory Machine
 
-[![Go Version](https://img.shields.io/badge/Go-1.25.2-blue.svg)](https://golang.org/)
-[![License](https://img.shields.io/badge/license-Apache 2.0-green.svg)](#license)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rawbytedev/memory3d)](https://goreportcard.com/report/github.com/rawbytedev/memory3d)
+
+![Test and Benchmark](https://github.com/rawbytedev/memory3d/actions/workflows/tests.yml/badge.svg)
+
+[![Go Version](https://img.shields.io/github/go-mod/go-version/rawbytedev/memory3d)](https://github.com/rawbytedev/memory3d)
+
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/rawbytedev/memory3d.svg)](https://pkg.go.dev/github.com/rawbytedev/memory3d)
+
+[![GitHub last commit](https://img.shields.io/github/last-commit/rawbytedev/memory3d)](https://github.com/rawbytedev/memory3d)
+
+[![GitHub Release](https://img.shields.io/github/v/release/rawbytedev/memory3d)](https://github.com/rawbytedev/memory3d/releases/latest)
+
+[![GitHub issues](https://img.shields.io/github/issues/rawbytedev/memory3d)](https://github.com/rawbytedev/memory3d/issues)
 
 **Memory3D** is a sophisticated 3D virtual machine designed for efficient memory management, spatial operations, and cryptographic memory proofing. It provides a unique approach to memory addressing using three dimensions (Regions, Planes, and Offsets) combined with advanced features like Merkle tree verification, gas metering, and intelligent memory compaction.
 
@@ -318,7 +329,7 @@ Run benchmarks:
 go test -bench=. ./test/benchmarks/...
 ```
 
-### Typical Performance (on i5-4200U @ 1.6GHz)
+### Performance (on i5-4200U @ 1.6GHz)
 
 | Operation | Time (ns) | Notes |
 | ----------- | ----------- | ------- |
