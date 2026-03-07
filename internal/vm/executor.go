@@ -275,7 +275,6 @@ func allocInfoToBytes(alloc *types.Allocation) []byte {
 	return b
 }
 
-
 type QueryType byte
 
 const (

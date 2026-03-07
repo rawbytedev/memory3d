@@ -86,11 +86,11 @@ func TestPriority1RegionMerkleRoot(t *testing.T) {
 // TestPriority1VMGasTracking tests VM gas tracking
 func TestPriority1VMGasTracking(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         5000,
-		EnableProof:      false,
-		MaxInstructions:  100,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        5000,
+		EnableProof:     false,
+		MaxInstructions: 100,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
@@ -113,11 +113,11 @@ func TestPriority1VMGasTracking(t *testing.T) {
 // TestPriority1VMMerkleDisabled tests VM with merkle disabled
 func TestPriority1VMMerkleDisabled(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         10000,
-		EnableProof:      false, // Merkle disabled
-		MaxInstructions:  100,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        10000,
+		EnableProof:     false, // Merkle disabled
+		MaxInstructions: 100,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
@@ -138,11 +138,11 @@ func TestPriority1VMMerkleDisabled(t *testing.T) {
 // TestPriority1VMMerkleEnabled tests VM with merkle enabled
 func TestPriority1VMMerkleEnabled(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         10000,
-		EnableProof:      true, // Merkle enabled
-		MaxInstructions:  100,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        10000,
+		EnableProof:     true, // Merkle enabled
+		MaxInstructions: 100,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
@@ -158,11 +158,11 @@ func TestPriority1VMMerkleEnabled(t *testing.T) {
 // TestPriority1AllocationAndMemoryOps tests memory allocation and operations
 func TestPriority1AllocationAndMemoryOps(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         100000,
-		EnableProof:      true,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        100000,
+		EnableProof:     true,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
@@ -188,11 +188,11 @@ func TestPriority1AllocationAndMemoryOps(t *testing.T) {
 // TestPriority1MerkleTreeViaVM tests merkle tree through VM integration
 func TestPriority1MerkleTreeViaVM(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         100000,
-		EnableProof:      true,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        100000,
+		EnableProof:     true,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
@@ -206,11 +206,11 @@ func TestPriority1MerkleTreeViaVM(t *testing.T) {
 
 	// Verify merkle disabled check
 	config2 := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         10000,
-		EnableProof:      false,
-		MaxInstructions:  100,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        10000,
+		EnableProof:     false,
+		MaxInstructions: 100,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmNoProof, err := vm.NewVM3D(config2)
@@ -227,11 +227,11 @@ func TestPriority1MerkleTreeViaVM(t *testing.T) {
 // TestPriority1EndToEndMemoryAndGas tests end-to-end memory ops with gas tracking
 func TestPriority1EndToEndMemoryAndGas(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         50000,
-		EnableProof:      true,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        50000,
+		EnableProof:     true,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)

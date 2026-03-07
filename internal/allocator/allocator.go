@@ -530,7 +530,7 @@ func (a *Allocator3D) AnalyzeCompaction(config CompactionConfig) []uint64 {
 		for _, plane := range region.Planes {
 			for _, alloc := range plane.Allocations {
 				// Skip pinned and Y-promoted allocations
-				if (alloc.Flags & types.FlagPinned) != 0 || alloc.IsYPromoted() {
+				if (alloc.Flags&types.FlagPinned) != 0 || alloc.IsYPromoted() {
 					continue
 				}
 

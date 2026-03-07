@@ -37,7 +37,7 @@ type VM3D struct {
 	pc        uint64 // Program counter
 	stack     []Frame
 	callStack []uint64
-	halted    bool   // Flag to indicate if VM has halted
+	halted    bool // Flag to indicate if VM has halted
 
 	// Statistics
 	stats   VMStats
@@ -310,19 +310,19 @@ func (vm *VM3D) executeMCompact3D(inst *Instruction3D) error {
 func (vm *VM3D) calculateGasCost(inst *Instruction3D) uint64 {
 	// Base cost per opcode
 	baseCost := map[Opcode]uint64{
-		OP_MLOAD3D:  10,
-		OP_MSTORE3D: 15,
-		OP_MALLOC3D: 20,
-		OP_MFREE3D:  5,
-		OP_MCOPY3D:  25,
-		OP_MQUERY3D: 8,
+		OP_MLOAD3D:    10,
+		OP_MSTORE3D:   15,
+		OP_MALLOC3D:   20,
+		OP_MFREE3D:    5,
+		OP_MCOPY3D:    25,
+		OP_MQUERY3D:   8,
 		OP_MCOMPACT3D: 30,
-		OP_NOP:      1,
-		OP_ADD3D:    3,
-		OP_SUB3D:    3,
-		OP_MOV3D:    2,
-		OP_MSIZE3D:  5,
-		OP_HALT3D:   1,
+		OP_NOP:        1,
+		OP_ADD3D:      3,
+		OP_SUB3D:      3,
+		OP_MOV3D:      2,
+		OP_MSIZE3D:    5,
+		OP_HALT3D:     1,
 	}
 
 	cost := baseCost[inst.Opcode]

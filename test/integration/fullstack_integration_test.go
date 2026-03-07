@@ -18,11 +18,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 	t.Run("Complex_workflow_with_memory_and_arithmetic", func(t *testing.T) {
 		// Create VM with realistic configuration
 		vmConfig := vm.VMConfig{
-			MemorySize:       1024 * 1024,      // 1MB
-			GasLimit:         500000,           // 500K gas
-			EnableProof:      true,             // Enable proofs for security
-			EnableCompaction: true,             // Enable memory compaction
-			MaxInstructions:  5000,             // 5K instructions
+			MemorySize:       1024 * 1024, // 1MB
+			GasLimit:         500000,      // 500K gas
+			EnableProof:      true,        // Enable proofs for security
+			EnableCompaction: true,        // Enable memory compaction
+			MaxInstructions:  5000,        // 5K instructions
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -78,11 +78,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 
 	t.Run("Multi_allocation_workflow", func(t *testing.T) {
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024,
-			GasLimit:        1000000,
-			EnableProof:     true,
+			MemorySize:       1024 * 1024,
+			GasLimit:         1000000,
+			EnableProof:      true,
 			EnableCompaction: true,
-			MaxInstructions: 5000,
+			MaxInstructions:  5000,
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -123,11 +123,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 
 	t.Run("Mixed_operations_sequence", func(t *testing.T) {
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024,
-			GasLimit:        500000,
-			EnableProof:     false,
+			MemorySize:       1024 * 1024,
+			GasLimit:         500000,
+			EnableProof:      false,
 			EnableCompaction: true,
-			MaxInstructions: 10000,
+			MaxInstructions:  10000,
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -176,11 +176,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 
 	t.Run("Memory_query_and_verification", func(t *testing.T) {
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024,
-			GasLimit:        50000,
-			EnableProof:     false,
+			MemorySize:       1024 * 1024,
+			GasLimit:         50000,
+			EnableProof:      false,
 			EnableCompaction: false,
-			MaxInstructions: 100,
+			MaxInstructions:  100,
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -218,11 +218,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 
 	t.Run("Register_data_flow", func(t *testing.T) {
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024,
-			GasLimit:        50000,
-			EnableProof:     false,
+			MemorySize:       1024 * 1024,
+			GasLimit:         50000,
+			EnableProof:      false,
 			EnableCompaction: false,
-			MaxInstructions: 100,
+			MaxInstructions:  100,
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -256,11 +256,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 	t.Run("Gas_consumption_tracking", func(t *testing.T) {
 		gasLimit := uint64(500000)
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024,
-			GasLimit:        gasLimit,
-			EnableProof:     false,
+			MemorySize:       1024 * 1024,
+			GasLimit:         gasLimit,
+			EnableProof:      false,
 			EnableCompaction: false,
-			MaxInstructions: 100,
+			MaxInstructions:  100,
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -280,11 +280,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 
 	t.Run("Program_halt_correctness", func(t *testing.T) {
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024,
-			GasLimit:        10000,
-			EnableProof:     false,
+			MemorySize:       1024 * 1024,
+			GasLimit:         10000,
+			EnableProof:      false,
 			EnableCompaction: false,
-			MaxInstructions: 100,
+			MaxInstructions:  100,
 		}
 		vmInstance, err := vm.NewVM3D(vmConfig)
 		require.NoError(t, err)
@@ -292,11 +292,11 @@ func TestFullStackRealWorldScenario(t *testing.T) {
 
 		// Build program: NOP, NOP, HALT, NOP (last NOP should not execute)
 		program := []byte{
-			0x00,       // OP_NOP
-			0x00,       // OP_NOP
-			0xFF,       // OP_HALT3D
-			0x00,       // OP_NOP (should not execute)
-			0x00,       // OP_NOP (should not execute)
+			0x00, // OP_NOP
+			0x00, // OP_NOP
+			0xFF, // OP_HALT3D
+			0x00, // OP_NOP (should not execute)
+			0x00, // OP_NOP (should not execute)
 		}
 
 		err = vmInstance.Execute(program)
@@ -321,11 +321,11 @@ func buildComplexComputationProgram() []byte {
 	// Initialize registers manually before execution
 	// This program just does arithmetic
 	program := []byte{
-		0x31,       // ADD3D: R2 = R0 + R1
+		0x31,        // ADD3D: R2 = R0 + R1
 		byte(vm.R2), // dest
 		byte(vm.R0), // src1
 		byte(vm.R1), // src2
-		0x32,       // SUB3D: R3 = R2 - R1
+		0x32,        // SUB3D: R3 = R2 - R1
 		byte(vm.R3),
 		byte(vm.R2),
 		byte(vm.R1),
@@ -338,11 +338,11 @@ func buildSequentialArithmeticProgram() []byte {
 	// Register initialization should be done before Execute
 	// This builds: R2 = R0 + R1
 	program := []byte{
-		0x31,       // ADD3D
+		0x31,        // ADD3D
 		byte(vm.R2), // destination
 		byte(vm.R0), // source 1
 		byte(vm.R1), // source 2
-		0xFF,       // HALT
+		0xFF,        // HALT
 	}
 	return program
 }
@@ -350,25 +350,25 @@ func buildSequentialArithmeticProgram() []byte {
 func buildRegisterChainProgram() []byte {
 	// R3 = R0, R4 = R1, R5 = R3
 	// MOV3D format: [opcode(1)][destReg(1)][srcReg(1)][padding(5)]
-	
+
 	// MOV R3 = R0
 	mov1 := make([]byte, 8)
 	mov1[0] = 0x30 // MOV3D opcode
 	mov1[1] = byte(vm.R3)
 	mov1[2] = byte(vm.R0)
-	
+
 	// MOV R4 = R1
 	mov2 := make([]byte, 8)
 	mov2[0] = 0x30 // MOV3D opcode
 	mov2[1] = byte(vm.R4)
 	mov2[2] = byte(vm.R1)
-	
+
 	// MOV R5 = R3
 	mov3 := make([]byte, 8)
 	mov3[0] = 0x30 // MOV3D opcode
 	mov3[1] = byte(vm.R5)
 	mov3[2] = byte(vm.R3)
-	
+
 	halt := []byte{0xFF}
 
 	program := append(mov1, mov2...)
@@ -380,11 +380,11 @@ func buildRegisterChainProgram() []byte {
 func buildSimpleArithmeticProgram() []byte {
 	// Simple: R2 = R0 + R1
 	program := []byte{
-		0x31,       // ADD3D
+		0x31,        // ADD3D
 		byte(vm.R2), // destination
 		byte(vm.R0), // source 1
 		byte(vm.R1), // source 2
-		0xFF,       // HALT
+		0xFF,        // HALT
 	}
 	return program
 }
@@ -401,11 +401,11 @@ func TestFullStackIntegratedWorkflow(t *testing.T) {
 		// 6. Cleanup
 
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024 * 10, // 10MB
-			GasLimit:        5000000,          // 5M gas
-			EnableProof:     true,
+			MemorySize:       1024 * 1024 * 10, // 10MB
+			GasLimit:         5000000,          // 5M gas
+			EnableProof:      true,
 			EnableCompaction: true,
-			MaxInstructions: 10000,
+			MaxInstructions:  10000,
 		}
 
 		vmInstance, err := vm.NewVM3D(vmConfig)
@@ -469,11 +469,11 @@ func TestFullStackIntegratedWorkflow(t *testing.T) {
 func TestRealWorldDataProcessing(t *testing.T) {
 	t.Run("Batch_data_processing", func(t *testing.T) {
 		vmConfig := vm.VMConfig{
-			MemorySize:      1024 * 1024 * 50,
-			GasLimit:        10000000,
-			EnableProof:     true,
+			MemorySize:       1024 * 1024 * 50,
+			GasLimit:         10000000,
+			EnableProof:      true,
 			EnableCompaction: true,
-			MaxInstructions: 50000,
+			MaxInstructions:  50000,
 		}
 
 		vmInstance, err := vm.NewVM3D(vmConfig)

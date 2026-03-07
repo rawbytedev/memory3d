@@ -27,20 +27,19 @@ func TestPriority2FragmentationAnalysis(t *testing.T) {
 	assert.LessOrEqual(t, report.Fragmentation, 1.0, "Fragmentation should be <= 1")
 }
 
-
 // TestPriority2VMCompactionAPI tests VM compaction API
 func TestPriority2VMCompactionAPI(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         100000,
-		EnableProof:      false,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        100000,
+		EnableProof:     false,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
 	require.NoError(t, err)
-    defer vmInstance.Shutdown()
+	defer vmInstance.Shutdown()
 
 	// Get compaction report
 	report := vmInstance.GetCompactionReport()
@@ -55,16 +54,16 @@ func TestPriority2VMCompactionAPI(t *testing.T) {
 // TestPriority2MemoryManagerRelocation tests allocation relocation through VM
 func TestPriority2MemoryManagerRelocation(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         100000,
-		EnableProof:      false,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        100000,
+		EnableProof:     false,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
 	require.NoError(t, err)
-    defer vmInstance.Shutdown()
+	defer vmInstance.Shutdown()
 
 	// Allocate memory through VM
 	addr1, err := vmInstance.AllocateMemory(100, types.RegionTypeHeap)
@@ -93,16 +92,16 @@ func TestPriority2MemoryManagerRelocation(t *testing.T) {
 // TestPriority2MCompact3DInstruction tests MCOMPACT3D execution
 func TestPriority2MCompact3DInstruction(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         100000,
-		EnableProof:      false,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        100000,
+		EnableProof:     false,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)
 	require.NoError(t, err)
-    defer vmInstance.Shutdown()
+	defer vmInstance.Shutdown()
 
 	// Record initial gas
 	initialGas := vmInstance.GetGasRemaining()
@@ -134,7 +133,7 @@ func TestPriority2CompactionEndToEnd(t *testing.T) {
 		MaxYPlanes:       1024,
 		MaxYPromotions:   8,
 		WorkerCount:      4,
-		EnableConcurrent: true, 
+		EnableConcurrent: true,
 	}
 	alloc := allocator.NewAllocator3D(allocConfig)
 	defer alloc.Shutdown()
@@ -167,11 +166,11 @@ func TestPriority2PinnedAllocationProtection(t *testing.T) {
 // TestPriority2SelfContainedCompaction tests compaction without full allocation
 func TestPriority2SelfContainedCompaction(t *testing.T) {
 	config := vm.VMConfig{
-		MemorySize:       1024 * 1024,
-		GasLimit:         50000,
-		EnableProof:      false,
-		MaxInstructions:  1000,
-		LogLevel:         vm.LogLevelSilent,
+		MemorySize:      1024 * 1024,
+		GasLimit:        50000,
+		EnableProof:     false,
+		MaxInstructions: 1000,
+		LogLevel:        vm.LogLevelSilent,
 	}
 
 	vmInstance, err := vm.NewVM3D(config)

@@ -12,10 +12,10 @@ var ErrInsufficientGas = errors.New("Insufficient Gas")
 
 type GasAccountant3D struct {
 	// Per-thread gas buckets to reduce contention
-	buckets    []*GasBucket
-	bucketIdx  uint64 // atomic counter for bucket selection
-	totalGas   uint64 // total gas limit
-	mu         sync.RWMutex
+	buckets   []*GasBucket
+	bucketIdx uint64 // atomic counter for bucket selection
+	totalGas  uint64 // total gas limit
+	mu        sync.RWMutex
 }
 
 func (g *GasAccountant3D) Remaining() int {
@@ -121,7 +121,6 @@ func absDiff64(a, b uint64) uint64 {
 	}
 	return b - a
 }
-
 
 // Refund returns gas to a bucket
 func (g *GasAccountant3D) Refund(gas uint64) {

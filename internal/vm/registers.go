@@ -71,13 +71,11 @@ func (r *Registers) GetUint64(reg Register) uint64 {
 	return 0
 }
 
-
 func (r *Registers) SetUint64(reg Register, value uint64) {
 	if reg <= R15 {
 		r.General[reg] = uint64ToBytes(value)
 	}
 }
-
 
 func (r *Registers) GetAddress(reg Register) (types.Address3D, error) {
 	data := r.Get(reg)

@@ -162,7 +162,6 @@ func (r *Region) Fragmentation() float64 {
 	return totalFrag / float64(len(r.Planes))
 }
 
-
 // UpdateMerkleRoot updates the merkle root for this region
 func (r *Region) UpdateMerkleRoot(root [32]byte) {
 	r.mu.Lock()
@@ -179,13 +178,13 @@ func (r *Region) GetMerkleRoot() [32]byte {
 
 // CompactionReport represents fragmentation data for compaction decisions
 type CompactionReport struct {
-	RegionID           uint64
-	TotalBytes         uint64
-	UsedBytes          uint64
-	FreeBytes          uint64
-	Fragmentation      float64
-	AllocationCount    uint32
-	RecommendCompact   bool
+	RegionID            uint64
+	TotalBytes          uint64
+	UsedBytes           uint64
+	FreeBytes           uint64
+	Fragmentation       float64
+	AllocationCount     uint32
+	RecommendCompact    bool
 	EstimatedGasSavings uint64
 }
 
