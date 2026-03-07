@@ -30,7 +30,7 @@ type BestFitPromoter struct {
 	maxSearchDepth   int
 }
 
-func (b *BestFitPromoter) FindPromotion(size uint32, region *types.Region, maxPlanes uint8) *PromotionPlan {
+func (b *BestFitPromoter) FindPromotion(size uint32, region *types.Region) *PromotionPlan {
 	region.RLock()
 	defer region.RUnlock()
 
@@ -43,7 +43,7 @@ func (b *BestFitPromoter) FindPromotion(size uint32, region *types.Region, maxPl
 	}
 
 	// Try to find best fit
-	bestPlan := b.findBestFit(size, freePlanes, maxPlanes)
+	bestPlan := b.findBestFit(size, freePlanes)
 	if bestPlan != nil {
 		bestPlan.RegionID = region.ID
 		bestPlan.Cost = b.CalculateCost(bestPlan)
@@ -53,7 +53,7 @@ func (b *BestFitPromoter) FindPromotion(size uint32, region *types.Region, maxPl
 	return bestPlan
 }
 
-func (b *BestFitPromoter) findBestFit(size uint32, planes []*types.Plane, maxPlanes uint8) *PromotionPlan {
+func (b *BestFitPromoter) findBestFit(size uint32, planes []*types.Plane) *PromotionPlan {
 	// Try to find single plane with enough space
 	for _, plane := range planes {
 		if uint32(plane.FreeBytes()) >= size {
@@ -76,10 +76,10 @@ func (b *BestFitPromoter) findBestFit(size uint32, planes []*types.Plane, maxPla
 	}
 
 	// Need multiple planes
-	return b.findMultiPlaneFit(size, planes, maxPlanes)
+	return b.findMultiPlaneFit(size, planes)
 }
 
-func (b *BestFitPromoter) findMultiPlaneFit(size uint32, planes []*types.Plane, maxPlanes uint8) *PromotionPlan {
+func (b *BestFitPromoter) findMultiPlaneFit(size uint32, planes []*types.Plane) *PromotionPlan {
 	// This is a bin-packing problem
 	// Simplified: try adjacent planes first, then any planes
 

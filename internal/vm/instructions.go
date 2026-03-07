@@ -37,10 +37,6 @@ func DecodeInstruction(data []byte) (*Instruction3D, error) {
 	}
 
 	opcode := Opcode(data[0])
-	_ = &Instruction3D{
-		Opcode: opcode,
-		Size:   uint32(len(data)),
-	}
 
 	// Decode based on opcode
 	switch opcode {

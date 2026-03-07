@@ -249,7 +249,7 @@ func (vm *VM3D) executeInstruction(inst *Instruction3D) error {
 	case OP_MQUERY3D:
 		return vm.executeMQuery3D(inst)
 	case OP_MCOMPACT3D:
-		return vm.executeMCompact3D(inst)
+		return vm.executeMCompact3D()
 	case OP_NOP:
 		return vm.executeNOP()
 	case OP_ADD3D:
@@ -273,7 +273,7 @@ func (vm *VM3D) executeHalt3D() error {
 	return nil
 }
 
-func (vm *VM3D) executeMCompact3D(inst *Instruction3D) error {
+func (vm *VM3D) executeMCompact3D() error {
 	// Get compaction analysis
 	config := allocator.DefaultCompactionConfig()
 	allocsToMove := vm.allocator.AnalyzeCompaction(config)
@@ -494,5 +494,5 @@ func (vm *VM3D) AllocateMemory(size uint32, regionType types.RegionType) (types.
 func (vm *VM3D) ExecuteCompactInstruction(inst *Instruction3D) error {
 	vm.mu.Lock()
 	defer vm.mu.Unlock()
-	return vm.executeMCompact3D(inst)
+	return vm.executeMCompact3D()
 }
