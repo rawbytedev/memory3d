@@ -287,17 +287,13 @@ func (mm *MemoryManager) GetFreeMemory(regionX uint64) uint64 {
 		return 0
 	}
 	fmt.Printf("%d", stats.CurrentUsage)
-	// This is simplified - in reality would query allocator
-	return 1024 * 1024 * 64 // Example: 64MB free
+	return mm.allocator.GetRegion(regionX).FreeBytes
 }
 
 func (mm *MemoryManager) GetFragmentation(regionX uint64) float64 {
 	mm.mu.RLock()
 	defer mm.mu.RUnlock()
-
-	// This would query the allocator for actual fragmentation
-	// For now, return a placeholder
-	return 0.25 // 25% fragmentation
+	return mm.allocator.GetRegion(regionX).Fragmentation()
 }
 
 // RelocateAllocation moves an allocation from oldAddr to newAddr
