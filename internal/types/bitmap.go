@@ -62,24 +62,89 @@ func (b *Bitmap) IsSet(pos uint16) bool {
 
 // FindContiguous finds contiguous free space of given size
 func (b *Bitmap) FindContiguous(size uint16) (uint16, bool) {
-	if size == 0 || size > b.size {
-		return 0, false
-	}
+    if size == 0 || size > b.size || len(b.bits) == 0 {
+        return 0, false
+    }
 
-	// Simple linear search for now (can be optimized)
-	for i := uint16(0); i <= b.size-size; i++ {
-		found := true
-		for j := uint16(0); j < size; j++ {
-			if b.IsSet(i + j) {
-				found = false
-				break
-			}
-		}
-		if found {
-			return i, true
-		}
-	}
-	return 0, false
+    numWords := len(b.bits)
+
+    for wi := 0; wi < numWords; wi++ {
+        word := b.bits[wi]
+
+        // All bits used in this word – skip entirely.
+        if ^word == 0 {
+            continue
+        }
+
+        // Invert the word to get free bits (1 = free, 0 = used).
+        freeBits := ^word
+
+        // Mask out invalid bits in the last word.
+        if wi == numWords-1 {
+            remaining := b.size - uint16(wi*64)
+            if remaining < 64 {
+                mask := ^uint64(0) >> (64 - remaining)
+                freeBits &= mask
+            }
+        }
+
+        // Iterate through each free bit in this word (only the runs).
+        // `freeBits` will become 0 after we've checked all candidates in this word.
+        for freeBits != 0 {
+            // Position of the first free bit inside this word.
+            tz := bits.TrailingZeros64(freeBits)
+            startPos := uint16(wi*64 + tz)
+
+            // Quick check: not enough space left in the bitmap.
+            if startPos+size > b.size {
+                return 0, false
+            }
+
+            // Now verify that ALL bits from startPos to startPos+size-1 are free.
+            endPos := startPos + size - 1
+            startIdx := int(startPos / 64)
+            endIdx := int(endPos / 64)
+
+            ok := true
+            // Check each word that the candidate range touches.
+            for wj := startIdx; wj <= endIdx; wj++ {
+                // Build a mask for the bits we care about in this word.
+                var mask uint64
+                if wj == startIdx && wj == endIdx {
+                    // Single word: bits from startPos to endPos.
+                    startBit := int(startPos % 64)
+                    endBit := int(endPos % 64)
+                    mask = ((uint64(1) << (endBit - startBit + 1)) - 1) << startBit
+                } else if wj == startIdx {
+                    // First of multiple words: from startPos to end of word.
+                    startBit := int(startPos % 64)
+                    mask = ^uint64(0) << startBit
+                } else if wj == endIdx {
+                    // Last of multiple words: from beginning to endPos.
+                    endBit := int(endPos % 64)
+                    mask = (uint64(1) << (endBit + 1)) - 1
+                } else {
+                    // Full middle word.
+                    mask = ^uint64(0)
+                }
+
+                // If any bit in the mask is set, the candidate fails.
+                if (b.bits[wj] & mask) != 0 {
+                    ok = false
+                    break
+                }
+            }
+
+            if ok {
+                return startPos, true
+            }
+
+            // Candidate failed – remove this free bit so we move to the next one.
+            freeBits &^= uint64(1) << tz
+        }
+    }
+
+    return 0, false
 }
 
 // SetRange sets a range of bits

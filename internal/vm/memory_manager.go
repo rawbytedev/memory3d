@@ -229,7 +229,7 @@ func (mm *MemoryManager) trackAllocation(alloc *types.Allocation) {
 		stats = &RegionStats{}
 		mm.regions[alloc.Address.X] = stats
 	}
-
+	
 	atomic.AddUint64(&stats.TotalAllocations, 1)
 	atomic.AddUint64(&stats.CurrentUsage, uint64(alloc.Size))
 
@@ -337,3 +337,14 @@ func (mm *MemoryManager) GetAllAllocations() []*types.Allocation {
 	}
 	return allocs
 }
+
+func (mm *MemoryManager) UpdateAllocationAddress(oldAddr, newAddr types.Address3D, alloc *types.Allocation) {
+    mm.mu.Lock()
+    defer mm.mu.Unlock()
+    delete(mm.allocations, oldAddr)
+    mm.allocations[newAddr] = alloc
+    // Also update the allocation object's Address
+    alloc.Address = newAddr
+    // No need to update region stats because total usage unchanged
+}
+

@@ -16,6 +16,7 @@ func TestAllocatorAllocationsNonOverlapping(t *testing.T) {
 		WorkerCount:      1,
 		EnableConcurrent: false,
 		EnablePooling:    false,
+		
 	}
 
 	a := NewAllocator3D(cfg)

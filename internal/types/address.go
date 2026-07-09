@@ -20,7 +20,7 @@ func NewAddress(x uint64, y uint32, z uint16) Address3D {
 
 // IsValid checks if the address is within bounds
 func (a Address3D) IsValid() bool {
-	return a.X < MaxXRegions && a.Y < MaxYPlanes && a.Z <= MaxZOffset
+	return a.X < MaxXRegions && a.Y < MaxYPlanes && a.Z < MaxZOffset
 }
 
 // Bytes serializes the address to bytes

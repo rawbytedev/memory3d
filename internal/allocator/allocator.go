@@ -3,6 +3,7 @@ package allocator
 import (
 	"container/list"
 	"fmt"
+	"log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -177,12 +178,17 @@ func (a *Allocator3D) allocateSync(size uint32, regionType types.RegionType, fla
 
 	// Try Y-promotion
 	if alloc := a.tryYPromotion(size, regionType, flags); alloc != nil {
-		atomic.AddUint64(&a.stats.YPromotions, 1)
 		return alloc, nil
 	}
-
 	// Create new region if needed
-	return a.allocateNewRegion(size, regionType, flags)
+	alloc, err := a.allocateNewRegion(size, regionType, flags)
+	if err != nil {
+		return nil, err
+	}
+	if alloc == nil {
+		return nil, fmt.Errorf("allocation failed for %d bytes", size)
+	}
+	return alloc, nil
 }
 
 func (a *Allocator3D) tryFastAllocation(size uint32, regionType types.RegionType) *types.Allocation {
@@ -232,107 +238,170 @@ func (a *Allocator3D) tryFastAllocation(size uint32, regionType types.RegionType
 	return nil
 }
 
+// tryYPromotion attempts to allocate a block across multiple planes within a single region.
+// It returns the allocation if successful, or nil if no region can satisfy the request.
 func (a *Allocator3D) tryYPromotion(size uint32, regionType types.RegionType, flags types.AllocationFlags) *types.Allocation {
-	// Find region of correct type
-	var targetRegion *types.Region
-	for _, region := range a.regions {
-		if region.Type == regionType {
-			targetRegion = region
-			break
-		}
-	}
-
-	if targetRegion == nil {
-		return nil
-	}
-
-	// Calculate planes needed
+	log.Printf("tryYPromotion called with size=%d", size)
+	// Calculate how many planes we need (at minimum).
 	planesNeeded := (size + uint32(a.config.PlaneSize) - 1) / uint32(a.config.PlaneSize)
 	if planesNeeded > uint32(a.config.MaxYPromotions) {
-		return nil // Too large for Y-promotion
+		return nil // Too large for Y-promotion (config limit)
 	}
 
-	// Find planes with enough free space
-	candidatePlanes := make([]*types.Plane, 0, planesNeeded)
-	remaining := size
+	// Find the region with the most free space that can host this allocation.
+	var bestRegion *types.Region
+	bestFree := uint64(0)
 
-	targetRegion.RLock()
-	for _, plane := range targetRegion.Planes {
-		if remaining == 0 {
-			break
+	// Scan all regions while holding a read lock.
+	for _, region := range a.regions {
+		if region.Type != regionType {
+			continue
 		}
 
-		freeBytes := plane.FreeBytes()
-		if freeBytes > 0 {
-			candidatePlanes = append(candidatePlanes, plane)
-			if uint32(freeBytes) >= remaining {
-				remaining = 0
-			} else {
-				remaining -= uint32(freeBytes)
+		// Sum free bytes across all planes in this region.
+		region.RLock()
+		totalFree := uint64(0)
+		planesWithFree := 0
+		for _, plane := range region.Planes {
+			if plane.FreeBytes() > 0 {
+				totalFree += uint64(plane.FreeBytes())
+				planesWithFree++
+			}
+		}
+		region.RUnlock()
+
+		// Candidate must have enough total free space AND enough planes with free bytes.
+		if totalFree >= uint64(size) && uint32(planesWithFree) >= planesNeeded {
+			// Prefer the region with the most free space (better for future allocations).
+			if totalFree > bestFree {
+				bestRegion = region
+				bestFree = totalFree
 			}
 		}
 	}
-	targetRegion.RUnlock()
 
-	if remaining > 0 || len(candidatePlanes) < int(planesNeeded) {
-		return nil
+	if bestRegion == nil {
+		return nil // No region can satisfy this request
 	}
 
-	// Create Y-promoted allocation
-	allocID := atomic.AddUint64(&a.nextAllocID, 1)
-	alloc := &types.Allocation{
-		ID:         allocID,
-		Size:       size,
-		RegionType: regionType,
-		Flags:      flags,
-		CreatedAt:  time.Now().UnixNano(),
-		LastUsed:   time.Now().UnixNano(),
+	// We have a candidate region – now perform the actual allocation.
+	// We need to lock the region for writing.
+	bestRegion.Lock()
+	defer bestRegion.Unlock()
+
+	// Gather all planes that have free space (we'll allocate from them in order).
+	type planeInfo struct {
+		plane *types.Plane
+		free  uint16
 	}
+	candidates := make([]planeInfo, 0, len(bestRegion.Planes))
+	for _, plane := range bestRegion.Planes {
+		if plane.FreeBytes() > 0 {
+			candidates = append(candidates, planeInfo{
+				plane: plane,
+				free:  plane.FreeBytes(),
+			})
+		}
+	}
+	log.Printf("Best region %d has total free %d, planes with free: %d", bestRegion.ID, bestFree, len(candidates))
+	// Sort candidates by free space descending (best fit, but any order works).
+	// For simplicity, we keep original order – you can add sorting if desired.
 
-	// Allocate in each plane
-	remaining = size
-	targetRegion.Lock()
-	defer targetRegion.Unlock()
+	// Try to allocate fragments.
+	var fragments []types.Fragment
+	remaining := size
+	var firstPlaneID uint32
+	var firstStartZ uint16
+	var firstAllocAddr types.Address3D
 
-	for i, plane := range candidatePlanes {
+	for _, info := range candidates {
+		if remaining == 0 {
+			break
+		}
+		plane := info.plane
 		allocSize := uint16(min(uint32(plane.FreeBytes()), remaining))
 		if allocSize == 0 {
 			continue
 		}
-
+		// Try to allocate contiguous space in this plane.
 		startZ, ok := plane.Allocate(allocSize)
 		if !ok {
-			// Rollback previous allocations
-			for j := 0; j < i; j++ {
-				_ = candidatePlanes[j]
-				// Need to track what we allocated to rollback
-				// Simplified for now
-			}
-			return nil
+			// This plane might have enough total free but not contiguous.
+			// We could try to compact later, but for now skip this plane.
+			log.Printf("Plane %d: failed to allocate %d bytes contiguously", plane.ID, allocSize)
+			continue
 		}
 
-		// Add fragment
-		isFirst := i == 0
-		alloc.AddFragment(plane.ID, startZ, allocSize, isFirst)
+		// Record fragment.
+		fragment := types.Fragment{
+			PlaneID: plane.ID,
+			StartZ:  startZ,
+			Size:    allocSize,
+			IsFirst: len(fragments) == 0,
+		}
+		fragments = append(fragments, fragment)
 
-		// Store allocation in first plane
-		if isFirst {
-			plane.Allocations[startZ] = alloc
-			alloc.Address = types.Address3D{X: targetRegion.ID, Y: plane.ID, Z: startZ}
+		// Store the allocation pointer in the first plane's map.
+		if len(fragments) == 1 {
+			firstPlaneID = plane.ID
+			firstStartZ = startZ
+			firstAllocAddr = types.Address3D{X: bestRegion.ID, Y: plane.ID, Z: startZ}
 		}
 
 		remaining -= uint32(allocSize)
 	}
 
 	if remaining > 0 {
+		// Allocation failed – rollback any fragments we allocated.
+		for _, frag := range fragments {
+			// Find the plane again (we have plane ID) and free that fragment.
+			for _, p := range bestRegion.Planes {
+				if p.ID == frag.PlaneID {
+					// Directly clear the bitmap range we set during the trial
+					p.FreeMap.ClearRange(frag.StartZ, frag.StartZ+frag.Size)
+					// Also remove any leftover entry if one exists (should not)
+					delete(p.Allocations, frag.StartZ)
+					break
+				}
+			}
+		}
+		log.Printf("Failed to allocate all fragments, remaining=%d", remaining)
 		return nil
 	}
 
-	// Update statistics
-	atomic.AddUint64(&targetRegion.AllocCount, 1)
-	atomic.AddUint64(&targetRegion.FreeBytes, ^uint64(size-1))
+	// All fragments allocated successfully – create the allocation object.
+	allocID := atomic.AddUint64(&a.nextAllocID, 1)
+	alloc := &types.Allocation{
+		ID:         allocID,
+		Address:    firstAllocAddr,
+		Size:       size,
+		RegionType: regionType,
+		Flags:      flags,
+		CreatedAt:  time.Now().UnixNano(),
+		LastUsed:   time.Now().UnixNano(),
+		Fragments:  fragments,
+	}
 
-	a.promoteRegionLRU(targetRegion.ID)
+	// Store the allocation in the first plane's map (so it can be found by address).
+	// We also need to update the region's statistics.
+	// The allocation is stored in the first plane's Allocations map.
+	for _, plane := range bestRegion.Planes {
+		if plane.ID == firstPlaneID {
+			plane.Allocations[firstStartZ] = alloc
+			break
+		}
+	}
+
+	// Update region statistics (atomic).
+	atomic.AddUint64(&bestRegion.AllocCount, 1)
+	atomic.AddUint64(&bestRegion.FreeBytes, ^uint64(size-1)) // subtract
+
+	// Promote this region to the front of LRU (hot).
+	a.promoteRegionLRU(bestRegion.ID)
+
+	// Increment global Y-promotions counter.
+	atomic.AddUint64(&a.stats.YPromotions, 1)
+
 	return alloc
 }
 
@@ -371,7 +440,11 @@ func (a *Allocator3D) allocateNewRegion(size uint32, regionType types.RegionType
 	}
 
 	// If single plane not enough, use Y-promotion
-	return a.tryYPromotion(size, regionType, flags), nil
+	/*if alloc := a.tryYPromotion(size, regionType, flags); alloc != nil {
+		return alloc, nil
+	}*/
+	// Still no space – report failure
+	return nil, fmt.Errorf("insufficient memory to allocate %d bytes", size)
 }
 
 func (a *Allocator3D) Free(alloc *types.Allocation) error {
@@ -548,6 +621,51 @@ func (a *Allocator3D) AnalyzeCompaction(config CompactionConfig) []uint64 {
 	}
 
 	return allocsToMove
+}
+
+func (a *Allocator3D) AllocateInRegion(size uint32, region *types.Region, flags types.AllocationFlags) (*types.Allocation, error) {
+	// region must be locked (write lock) when calling this.
+	// 1. Try existing planes
+	for _, plane := range region.Planes {
+		if uint32(plane.FreeBytes()) >= size {
+			startZ, ok := plane.Allocate(uint16(size))
+			if ok {
+				// create allocation
+				allocID := atomic.AddUint64(&a.nextAllocID, 1)
+				addr := types.Address3D{X: region.ID, Y: plane.ID, Z: startZ}
+				alloc := types.NewAllocation(allocID, addr, size, region.Type)
+				alloc.Flags = flags
+				plane.Allocations[startZ] = alloc
+				atomic.AddUint64(&region.AllocCount, 1)
+				atomic.AddUint64(&region.FreeBytes, ^uint64(size-1))
+				a.promoteRegionLRU(region.ID)
+				return alloc, nil
+			}
+		}
+	}
+
+	// 2. Need a new plane
+	newPlaneID := uint32(len(region.Planes))
+	plane := a.getPlaneFromPool(newPlaneID, region.ID)
+	region.AddPlane(plane) // this updates region's TotalBytes etc.
+
+	// Now allocate in the new plane
+	if uint32(plane.FreeBytes()) >= size {
+		startZ, ok := plane.Allocate(uint16(size))
+		if ok {
+			allocID := atomic.AddUint64(&a.nextAllocID, 1)
+			addr := types.Address3D{X: region.ID, Y: newPlaneID, Z: startZ}
+			alloc := types.NewAllocation(allocID, addr, size, region.Type)
+			alloc.Flags = flags
+			plane.Allocations[startZ] = alloc
+			atomic.AddUint64(&region.AllocCount, 1)
+			atomic.AddUint64(&region.FreeBytes, ^uint64(size-1))
+			a.promoteRegionLRU(region.ID)
+			return alloc, nil
+		}
+	}
+
+	return nil, fmt.Errorf("failed to allocate in region")
 }
 
 // Shutdown cleanly closes worker channels, allowing worker goroutines to exit

@@ -4,8 +4,8 @@ const (
 	// Memory dimensions
 	MaxXRegions = 256
 	MaxYPlanes  = 65535 // 64K planes per region
-	MaxZOffset  = 65535 // 64KB per plane
-	PlaneSize   = 65535 // 64KB
+	MaxZOffset  = 65534 // 64KB per plane
+	PlaneSize   = 65535 // 64KB - 1
 
 	// Gas constants
 	GasBaseAllocation = 3
